@@ -11,8 +11,7 @@ namespace Receive
     {
         private static void Main()
         {
-            var factory = new ConnectionFactory() { HostName = "localhost" };
-
+            var factory = new ConnectionFactory() { HostName = "rabbitmq" };
             using var connection = factory.CreateConnection();
             using var channel = connection.CreateModel();
 
@@ -21,21 +20,19 @@ namespace Receive
                  exclusive: false,
                  autoDelete: false,
                  arguments: null);
-
             channel.BasicQos(0, 1, false);
 
-            Console.WriteLine("[x] Waiting for messages.");
-
+            Console.WriteLine("[receive] Waiting for messages.");
             var consumer = new EventingBasicConsumer(channel);
             consumer.Received += (sender, ea) =>
             {
                 var body = ea.Body.ToArray();
                 var message = Encoding.UTF8.GetString(body);
-                Console.WriteLine($"[x] Received {message}");
+                Console.WriteLine($"[receive] Received message '{message}'");
 
                 int dots = message.Count(c => c == '.');
                 Thread.Sleep(dots * 1000);
-                Console.WriteLine("[x] Done");
+                Console.WriteLine("[receive] Message processed.");
 
                 channel.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
             };
@@ -44,7 +41,7 @@ namespace Receive
                                  autoAck: false,
                                  consumer: consumer);
 
-            Console.WriteLine("Press [enter] to exit.");
+            Console.WriteLine("Press any key to exit.");
             Console.ReadLine();
         }
     }
