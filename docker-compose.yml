@@ -1,0 +1,42 @@
+version: "3.4"
+
+services:
+  send:
+    image: send
+    depends_on: [rabbitmq]
+    links: [rabbitmq]
+    networks: [net]
+    restart: on-failure
+    build:
+      context: .
+      dockerfile: Send/Dockerfile
+
+  receive:
+    image: receive
+    depends_on: [rabbitmq]
+    links: [rabbitmq]
+    networks: [net]
+    restart: on-failure
+    build:
+      context: .
+      dockerfile: Receive/Dockerfile
+
+  rabbitmq:
+    container_name: rabbitmq
+    hostname: rabbitmq
+    image: rabbitmq:latest
+    networks: [net]
+    expose:
+      - 5672
+      - 15672
+    ports: 
+      - 15672:15672
+      - 5672:5672
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5672"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+networks:
+  net:
