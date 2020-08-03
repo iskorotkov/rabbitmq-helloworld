@@ -1,0 +1,31 @@
+version: "3.4"
+
+services:
+  emitlogs:
+    image: emitlogs
+    links:
+      - rabbitmq
+    restart: on-failure
+    build:
+      context: .
+      dockerfile: EmitLogs/Dockerfile
+
+  receivelogs:
+    image: receivelogs
+    links:
+      - rabbitmq
+    restart: on-failure
+    build:
+      context: .
+      dockerfile: ReceiveLogs/Dockerfile
+    deploy:
+      replicas: 4
+
+  rabbitmq:
+    image: rabbitmq:latest
+    expose:
+      - 5672
+      - 15672
+    ports:
+      - 5672:5672
+      - 15672:15672
