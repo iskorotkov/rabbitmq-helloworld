@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Text;
 using RabbitMQ.Client;
 
@@ -12,22 +13,18 @@ namespace Send
             using var connection = factory.CreateConnection();
             using var channel = connection.CreateModel();
 
-            channel.ExchangeDeclare("logs", ExchangeType.Fanout);
+            channel.ExchangeDeclare("direct_logs", ExchangeType.Direct);
 
-            var message = GetMessage(args);
+            var severity = (args.Length > 0) ? args[0] : "info";
+            var message = (args.Length > 1) ? string.Join(" ", args.Skip(1).ToArray()) : "Hello World!";
             var body = Encoding.UTF8.GetBytes(message);
 
-            Console.WriteLine($"[send] Sending message '{message}'.");
-            channel.BasicPublish(exchange: "logs",
-                                 routingKey: "",
+            Console.WriteLine($"[send] Sending message '{message}' with severity '{severity}'.");
+            channel.BasicPublish(exchange: "direct_logs",
+                                 routingKey: severity,
                                  basicProperties: null,
                                  body: body);
-            Console.WriteLine($"[send] Message '{message}' sent.");
-        }
-
-        private static string GetMessage(string[] args)
-        {
-            return (args.Length > 0) ? string.Join(" ", args) : "Hello World!";
+            Console.WriteLine($"[send] Message '{message}' sent with severity '{severity}'.");
         }
     }
 }
